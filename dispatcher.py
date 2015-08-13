@@ -45,18 +45,13 @@ class Dispatcher():
         if len(self.run_stack) > 0:
             self.run_stack[-1].event.set()
     
-    # I am disappointed with this function
     def to_top(self, process):
         """Move the process to the top of the stack."""
         # remove the process from the stack
         removed_index = self.run_stack.index(process)
         removed_process = process
         self.run_stack.remove(process)
-        # Move the process to a temp window (top of the wait window)
-        # I feel bad doing this but this is why I did it
-        # If I move the this process to the top of the runnable stack, and there are 8 process running, it will either override the the 8th process window or the program will crash as there is no room on the runnable stack to place this. We have to move this process to a temp window because if we don't, the text "How many loops" can disappear for a interactive process.
-        # But by putting the process on the top of the wait stack, an error will never occur as the max process is 8, so if we have 8 interactive processes waiting, we will be unable to move a runnable process to the top and also we have to start one of the interactive process, reducing the wait stack to 7, allowing us to use that position for the temp window.
-        removed_process.state = State.waiting
+        # Move the process to a temp window (top of the runnable window)
         self.io_sys.move_process(process,7)
         # Check to see process in middle of the stack
         if len(self.run_stack) - removed_index > 0:
@@ -65,7 +60,6 @@ class Dispatcher():
                 self.io_sys.move_process(self.run_stack[x],x)
         # Add the process back onto the stack
         self.run_stack.append(removed_process)
-        removed_process.state = State.runnable
         self.io_sys.move_process(removed_process,len(self.run_stack)-1)
         
         # Cheap way out to get 2 processes running
@@ -91,8 +85,9 @@ class Dispatcher():
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""
         # Make the thread wait till all over threads are finished
-        self.event.clear()
-        self.event.wait()
+        if self.run_stack != 0:
+            self.event.clear()
+            self.event.wait()
 
 
     def proc_finished(self, process):

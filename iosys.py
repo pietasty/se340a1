@@ -92,16 +92,18 @@ class IO_Sys():
 
     def fill_buffer(self, process, data):
         """Fill the process buffer with data."""
+        # Assign process the input data
         self.process_buffers[process] = data
+        # Make the process runnable
         process.event.set()
         process.state = State.runnable
-        # Stops the other shit first
+        # Stops the other processes in the stack
         for p in self.the_dispatcher.run_stack:
             p.event.clear()
         # Allows first one to run
         if len(self.the_dispatcher.run_stack) != 0:
             self.the_dispatcher.run_stack[-1].event.set()
-        # Moves the shit
+        # Append process onto runnable stack and remove from waiting stack
         self.the_dispatcher.run_stack.append(process)
         self.the_dispatcher.wait_stack.remove(process)
         self.move_process(process,len(self.the_dispatcher.run_stack)-1)
@@ -128,7 +130,8 @@ class IO_Sys():
         # waits for user input
         process.event.clear()
         process.event.wait()
-        return self.process_buffers.pop(process)
+        # default of -1 is given as the thread needs to be awaken before killed
+        return self.process_buffers.pop(process,-1)
 
 # =======================================================================================================================
 

@@ -35,14 +35,13 @@ class Process(threading.Thread):
         # which should only be modified by the dispatcher and io system.
         # the state can be used to determine which list - runnable or waiting the process
         # appears in.
-        # ...
         self.state = State.runnable
         self.event = threading.Event()
         self.event.set()
-        self.lock = threading.Lock()
 
     def run(self):
         """Start the process running."""
+        # Give the process a window
         self.iosys.allocate_window_to_process(self,len(self.dispatcher.run_stack)-1)
         if self.type == Type.background:
             self.run_background()
