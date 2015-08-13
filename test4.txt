@@ -1,0 +1,11 @@
+nininipf2
+10
+pf1
+10
+pf1
+-1
+pf3
+150
+pf2
+10
+pq
