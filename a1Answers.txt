@@ -1,0 +1,20 @@
+Question 1)
+
+   x|x|x|x x x x x|x x x x x x x x|x x x|x x x x x x x   
+
+P1 -                                     -------------
+P2   -                             -----
+P3     -           ---------------
+P4       ---------
+
+  0 1 2 3         8               16    19            26
+
+
+Question 2)
+
+
+
+
+
+
+Question 3)
