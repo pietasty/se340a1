@@ -38,6 +38,7 @@ class Process(threading.Thread):
         self.state = State.runnable
         self.event = threading.Event()
         self.event.set()
+        self.lock = threading.Lock()
 
     def run(self):
         """Start the process running."""

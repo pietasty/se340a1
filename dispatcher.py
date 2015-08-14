@@ -18,6 +18,7 @@ class Dispatcher():
         self.wait_stack = []
         self.event = Event()
         self.event.set()
+        self.lock = Lock()
 
     def set_io_sys(self, io_sys):
         """Set the io subsystem."""
@@ -25,6 +26,10 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
+
+        #Lock
+        self.lock.acquire()
+
         # Stops everything in the stack
         for p in self.run_stack:
             p.event.clear()
@@ -35,6 +40,9 @@ class Dispatcher():
         self.run_stack.append(process)
         # Start the process
         process.start()
+
+        # Release lock
+        self.lock.release()
 
     def dispatch_next_process(self):
         """Dispatch the process at the top of the stack."""
@@ -47,6 +55,10 @@ class Dispatcher():
     
     def to_top(self, process):
         """Move the process to the top of the stack."""
+
+        #Lock
+        process.lock.acquire()
+
         # remove the process from the stack
         removed_index = self.run_stack.index(process)
         removed_process = process
@@ -67,12 +79,17 @@ class Dispatcher():
             r_p.event.clear()
         self.dispatch_next_process()
 
+        process.lock.release()
+
 
     def pause_system(self):
         """Pause the currently running process.
         As long as the dispatcher doesn't dispatch another process this
         effectively pauses the system.
         """
+
+        self.lock.acquire()
+
         # Stop all the processes!!!
         for r_p in self.run_stack:
             r_p.event.clear()
@@ -81,6 +98,8 @@ class Dispatcher():
         """Resume running the system."""
         # Tell the top 2 processes to start
         self.dispatch_next_process()
+
+        self.lock.release()
 
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""
@@ -94,6 +113,9 @@ class Dispatcher():
         """Receive notification that "proc" has finished.
         Only called from running processes.
         """
+        
+        process.lock.acquire()
+
         # Remove the finished process from the stack
         removed_index = self.run_stack.index(process)
         self.run_stack.remove(process)
@@ -108,8 +130,13 @@ class Dispatcher():
         if(len(self.run_stack)) == 0:
             self.event.set()
 
+        process.lock.release()
+
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
+
+        process.lock.acquire()
+
         # Removes the process from the runnable stack
         removed_index = self.run_stack.index(process)
         self.run_stack.remove(process)
@@ -122,8 +149,13 @@ class Dispatcher():
         # Add process to the wait stack
         self.wait_stack.append(process)
 
+        process.lock.release()
+
     def process_with_id(self, id):
         """Return the process with the id."""
+
+        self.lock.acquire()
+
         # Finds the process in the run or the wait stack
         process = ''
         for p in self.run_stack:
@@ -132,10 +164,16 @@ class Dispatcher():
         for p in self.wait_stack:
             if p.id == id:
                 process = p
+
+        self.lock.release()
+
         return process
 
     def process_kill(self, process):
         '''Gets called when a process is killed'''
+
+        process.lock.acquire()
+
         # Check if process is a runnable one or waiting one
         if process.state == State.runnable:
             # Remove from runnable stack, and reshuffle run stack if process was in middle of the stack
@@ -150,6 +188,9 @@ class Dispatcher():
             # Remove from the wait stack, no reshuffling needs to be done
             self.wait_stack.remove(process)
             self.io_sys.remove_window_from_process(process)
+
+        process.lock.release()
+
         # Kill the process
         process.event.set()
         process.state = State.killed

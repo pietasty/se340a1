@@ -92,6 +92,9 @@ class IO_Sys():
 
     def fill_buffer(self, process, data):
         """Fill the process buffer with data."""
+
+        process.lock.acquire()
+
         # Assign process the input data
         self.process_buffers[process] = data
         # Make the process runnable
@@ -108,6 +111,7 @@ class IO_Sys():
         self.the_dispatcher.wait_stack.remove(process)
         self.move_process(process,len(self.the_dispatcher.run_stack)-1)
         
+        process.lock.release()
 
     def read(self, process):
         """Gets input from the window associated with 'process'."""
