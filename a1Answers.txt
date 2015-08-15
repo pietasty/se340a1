@@ -1,5 +1,5 @@
 Question 1)
-
+  
    x|x|x|x x x x x|x x x x x x x x|x x x|x x x x x x x   
 
 P1 -                                     -------------
@@ -9,12 +9,27 @@ P4       ---------
 
   0 1 2 3         8               16    19            26
 
+Waiting Times
+P1 = 18
+P2 = 14
+P3 = 5
+P4 = 0
+
+Average Wait time
+(18+14+5+0) / 4 = 9.25
 
 Question 2)
 
+The python library provides a user level thread implementation. This means that the OS only sees one thread per process and it is up to the library to handle the threads. To control these threads, the user has to tell each thread what to do, as the user are controlling how the threads behave. 
+So in our case we (the user) have to keep a consistent check that a process has been killed as the OS does not know about each individual we create using the python library. The OS only knows about the python program we are currently running. 
 
-
-
-
+In a real system, there will be a system level thread implementation, in which the OS is able to know about all threads. So we as the user does not control the threads and have to consistently check the state of the thread and when it is killed, tell the thread to exit, the OS will be able to handle it as the OS knows about the thread.
 
 Question 3)
+
+There are both pros and cons to only maintaining one stack when we are scaling to multiple cores.
+If there is only one stack, could be problems with how the next thread on the stack is started. If it was the finishing thread's job to go to the top of the stack and tell the next thread to use this core to run, there could be a problem then 2 threads could finish at the same time and try to access the stack at the same time. This problem can be sovled using locks, but however using locks can slow down the program. 
+
+If there are more then one stack and each stack is allocated to a core, there comes to a problem which stack a thread should be allocated to. This means that there needs to be a load balancer to balance the number of threads in each stack, as there could be a situation where a stack is empty and another stack is full of waiting threads.
+
+With all that said, it can be concluded that using a stack to schedule threads can never be a good idea. This is due to the fact that there can always be situations in where if you are either using one stack or more than one stack, a thread who enters the stack can never get process time. This is the situation of when the thread is added to the stack and just before a thread is finished, another thread is added to the stack. Meaning that Queues should be used to schedule processes/threads.
